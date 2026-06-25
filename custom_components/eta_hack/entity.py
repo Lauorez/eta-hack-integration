@@ -16,7 +16,6 @@ def _uri_to_slug(uri: str) -> str:
 
 class EtaHackEntity(CoordinatorEntity[EtaHackCoordinator]):
     _attr_has_entity_name = True
-    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,

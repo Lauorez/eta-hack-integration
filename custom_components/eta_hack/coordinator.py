@@ -54,6 +54,14 @@ class EtaHackCoordinator(DataUpdateCoordinator[dict]):
 
         await asyncio.gather(*[_fetch_info(item) for item in self.menu_items])
 
+        writable = sum(1 for i in self.var_info_cache.values() if i.is_writable)
+        _LOGGER.info(
+            "ETA Hack discovery: %d menu variables, %d with varinfo (%d writable)",
+            len(self.menu_items),
+            len(self.var_info_cache),
+            writable,
+        )
+
     async def _async_setup(self) -> None:
         await self.async_initialize()
 

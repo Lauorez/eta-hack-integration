@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from typing import Any
@@ -7,6 +8,10 @@ from typing import Any
 import aiohttp
 
 _NS = "http://www.eta.co.at/rest/v1"
+
+# The ETAtouch gateway is a small embedded device; limit concurrent requests
+# so discovery and polling don't overwhelm it (which causes timeouts / resets).
+_MAX_CONCURRENCY = 4
 
 
 @dataclass
@@ -57,14 +62,18 @@ class EtaHackClient:
     def __init__(self, session: aiohttp.ClientSession, host: str, port: int) -> None:
         self._session = session
         self._base = f"http://{host}:{port}"
+        self._sem = asyncio.Semaphore(_MAX_CONCURRENCY)
 
     async def _get_xml(self, path: str) -> ET.Element:
         url = f"{self._base}{path}"
         try:
-            async with self._session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
-                resp.raise_for_status()
-                text = await resp.text(encoding="utf-8")
-        except aiohttp.ClientError as exc:
+            async with self._sem:
+                async with self._session.get(
+                    url, timeout=aiohttp.ClientTimeout(total=15)
+                ) as resp:
+                    resp.raise_for_status()
+                    text = await resp.text(encoding="utf-8")
+        except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
             raise EtaApiError(f"HTTP error fetching {path}: {exc}") from exc
         try:
             return ET.fromstring(text)
@@ -74,15 +83,16 @@ class EtaHackClient:
     async def _post_form(self, path: str, data: dict[str, Any]) -> ET.Element:
         url = f"{self._base}{path}"
         try:
-            async with self._session.post(
-                url,
-                data=data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as resp:
-                resp.raise_for_status()
-                text = await resp.text(encoding="utf-8")
-        except aiohttp.ClientError as exc:
+            async with self._sem:
+                async with self._session.post(
+                    url,
+                    data=data,
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    timeout=aiohttp.ClientTimeout(total=15),
+                ) as resp:
+                    resp.raise_for_status()
+                    text = await resp.text(encoding="utf-8")
+        except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
             raise EtaApiError(f"HTTP error posting to {path}: {exc}") from exc
         try:
             return ET.fromstring(text)
