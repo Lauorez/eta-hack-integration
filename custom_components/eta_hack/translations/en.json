@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to ETA Hack",
+        "description": "Enter the address of your ETAtouch device.",
+        "data": {
+          "host": "Host / IP address",
+          "port": "Port",
+          "scan_interval": "Polling interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the ETA device. Check the host, port, and that LAN access is enabled on the device."
+    },
+    "abort": {
+      "already_configured": "This ETA device is already configured."
+    }
+  }
+}

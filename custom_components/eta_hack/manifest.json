@@ -1,0 +1,10 @@
+{
+  "domain": "eta_hack",
+  "name": "ETA Hack Heating",
+  "version": "0.1.0",
+  "config_flow": true,
+  "documentation": "https://github.com/laurenz/eta-hack-integration",
+  "requirements": [],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}
