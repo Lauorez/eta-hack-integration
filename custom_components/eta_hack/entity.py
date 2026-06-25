@@ -14,6 +14,16 @@ def _uri_to_slug(uri: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", uri.lower()).strip("_")
 
 
+def resolve_name(coordinator: EtaHackCoordinator, uri: str, override: str = "") -> str:
+    """Pick a display name: explicit override, else the menu path, else the URI."""
+    if override:
+        return override
+    for item in coordinator.menu_items:
+        if item.uri == uri:
+            return item.path
+    return uri
+
+
 class EtaHackEntity(CoordinatorEntity[EtaHackCoordinator]):
     _attr_has_entity_name = True
 

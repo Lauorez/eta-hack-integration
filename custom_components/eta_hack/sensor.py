@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .controls import controlled_uris
 from .coordinator import EtaHackCoordinator
 from .entity import EtaHackEntity
 
@@ -18,16 +19,17 @@ async def async_setup_entry(
     coordinator: EtaHackCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     # A variable is owned by switch/number/select only when varinfo confirms it
-    # is writable. Everything else (read-only, or unknown because varinfo could
-    # not be fetched) becomes a sensor. This guarantees a sensor for every menu
+    # is writable, or when the user has defined a manual control for it.
+    # Everything else becomes a sensor. This guarantees a sensor for every menu
     # leaf even if varinfo discovery is incomplete on the device.
-    writable_uris = {
+    owned_uris = {
         uri for uri, info in coordinator.var_info_cache.items() if info.is_writable
     }
+    owned_uris |= controlled_uris(entry)
     entities = [
         EtaHackSensor(coordinator, entry, item.uri, item.path)
         for item in coordinator.menu_items
-        if item.uri not in writable_uris
+        if item.uri not in owned_uris
     ]
     async_add_entities(entities)
 

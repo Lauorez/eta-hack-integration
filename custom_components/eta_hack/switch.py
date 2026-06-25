@@ -7,8 +7,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import VarInfo
 from .const import DOMAIN
+from .controls import get_controls
 from .coordinator import EtaHackCoordinator
-from .entity import EtaHackEntity
+from .entity import EtaHackEntity, resolve_name
 
 
 def _is_switch(info: VarInfo) -> bool:
@@ -26,25 +27,31 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: EtaHackCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities = [
-        EtaHackSwitch(coordinator, entry, item.uri, item.path)
-        for item in coordinator.menu_items
-        if item.uri in coordinator.var_info_cache
-        and _is_switch(coordinator.var_info_cache[item.uri])
-    ]
+    entities: list[EtaHackSwitch] = []
+
+    # Auto-detected via varinfo (API >= 1.2)
+    for item in coordinator.menu_items:
+        info = coordinator.var_info_cache.get(item.uri)
+        if info and _is_switch(info):
+            on_raw = next(raw for sv, raw in info.valid_values if sv.lower() in ("on", "ein"))
+            off_raw = next(raw for sv, raw in info.valid_values if sv.lower() in ("off", "aus"))
+            entities.append(EtaHackSwitch(coordinator, entry, item.uri, item.path, on_raw, off_raw))
+
+    # User-defined manual controls (works on any firmware)
+    for control in get_controls(entry, "switch"):
+        name = resolve_name(coordinator, control["uri"], control.get("name", ""))
+        entities.append(
+            EtaHackSwitch(coordinator, entry, control["uri"], name, control["on"], control["off"])
+        )
+
     async_add_entities(entities)
 
 
 class EtaHackSwitch(EtaHackEntity, SwitchEntity):
-    def __init__(self, coordinator, entry, uri, path):
-        info = coordinator.var_info_cache[uri]
-        super().__init__(coordinator, entry, uri, path)
-        self._on_raw = next(
-            raw for sv, raw in info.valid_values if sv.lower() in ("on", "ein")
-        )
-        self._off_raw = next(
-            raw for sv, raw in info.valid_values if sv.lower() in ("off", "aus")
-        )
+    def __init__(self, coordinator, entry, uri, name, on_raw, off_raw):
+        super().__init__(coordinator, entry, uri, name)
+        self._on_raw = on_raw
+        self._off_raw = off_raw
 
     @property
     def is_on(self) -> bool | None:

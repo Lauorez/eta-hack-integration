@@ -17,5 +17,72 @@
     "abort": {
       "already_configured": "This ETA device is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ETA Hack controls",
+        "description": "Define writable controls for your device. This is required on API < 1.2, which cannot auto-detect writable variables. Choose an action, then select Save to apply.",
+        "menu_options": {
+          "add_switch": "Add a switch (On/Off)",
+          "add_number": "Add a number (setpoint)",
+          "add_select": "Add a select (multiple choices)",
+          "remove": "Remove a control",
+          "save": "Save and apply"
+        }
+      },
+      "add_switch": {
+        "title": "Add switch — choose variable",
+        "description": "Pick the variable from the menu tree, or type its URI (Node/Fub/Fkt/Io/Var).",
+        "data": {
+          "uri": "Variable",
+          "name": "Custom name (optional)"
+        }
+      },
+      "add_switch_values": {
+        "title": "Add switch — raw values",
+        "description": "Current value: {current} (raw {raw}). Confirm the raw values the device expects for Off and On.",
+        "data": {
+          "off": "Raw value for Off",
+          "on": "Raw value for On"
+        }
+      },
+      "add_number": {
+        "title": "Add number — choose variable",
+        "description": "Pick the variable from the menu tree, or type its URI (Node/Fub/Fkt/Io/Var).",
+        "data": {
+          "uri": "Variable",
+          "name": "Custom name (optional)"
+        }
+      },
+      "add_number_values": {
+        "title": "Add number — range",
+        "description": "Current value: {current} {unit} (scale factor {scale}). Set the allowed range and step (in display units).",
+        "data": {
+          "min_value": "Minimum value",
+          "max_value": "Maximum value",
+          "step": "Step"
+        }
+      },
+      "add_select": {
+        "title": "Add select",
+        "description": "Pick the variable, then list the choices, one per line as Label=rawvalue. Example:\nComfort=1802\nEco=1803",
+        "data": {
+          "uri": "Variable",
+          "name": "Custom name (optional)",
+          "options": "Choices (Label=raw per line)"
+        }
+      },
+      "remove": {
+        "title": "Remove controls",
+        "description": "Select the controls to remove.",
+        "data": {
+          "remove": "Controls to remove"
+        }
+      }
+    },
+    "error": {
+      "invalid_options": "Enter at least one valid choice in the form Label=rawvalue."
+    }
   }
 }
