@@ -113,7 +113,16 @@ class EtaHackClient:
             raise EtaApiError("Missing <menu> element in /user/menu response")
         items: list[MenuItem] = []
         self._parse_menu_node(menu_el, "", items)
-        return items
+        # The same CAN variable can be referenced under several menu paths.
+        # Each URI maps to exactly one HA entity, so keep the first occurrence.
+        seen: set[str] = set()
+        unique: list[MenuItem] = []
+        for item in items:
+            if item.uri in seen:
+                continue
+            seen.add(item.uri)
+            unique.append(item)
+        return unique
 
     def _parse_menu_node(self, node: ET.Element, parent_path: str, items: list[MenuItem]) -> None:
         for child in node:
